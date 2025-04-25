@@ -14,8 +14,9 @@ class CarController extends Controller
         return view('front.cars.index', compact('types'));
     }
 
-    public function show(Car $car)
+    public function show($slug)
     {
+        $car = Car::with('images')->where('slug', $slug)->firstOrFail();
         return view('front.cars.show', compact('car'));
     }
 }

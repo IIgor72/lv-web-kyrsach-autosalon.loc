@@ -2,31 +2,6 @@
 
 @section('title', 'Новости и акции')
 
-@push('styles')
-<style>
-    /* Правильное определение размеров favicon */
-    link[rel="icon"] {
-        width: 16px;
-        height: 16px;
-    }
-
-    /* Дополнительные стили для улучшения отображения */
-    .card-img-top {
-        height: 200px;
-        object-fit: cover;
-    }
-
-    .card {
-        transition: transform 0.3s ease;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-</style>
-@endpush
-
 @section('content')
 <div class="container">
     <div class="row">
@@ -36,14 +11,19 @@
             <div class="row g-4">
                 @foreach($news as $item)
                 <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm">
-                        @if($item->image)
-                        <img src="{{ asset('storage/' . $item->image) }}" class="card-img-top" alt="{{ $item->title }}">
-                        @else
-                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center">
-                            <i class="fas fa-newspaper fa-4x text-muted"></i>
+                    <div class="card h-100 shadow-sm overflow-hidden">
+                        <!-- Контейнер для изображения с фиксированной высотой -->
+                        <div class="ratio ratio-16x9 bg-light">
+                            @if($item->image)
+                            <img src="{{ asset('storage/' . $item->image) }}"
+                                 class="img-fluid object-fit-cover"
+                                 alt="{{ $item->title }}">
+                            @else
+                            <div class="d-flex align-items-center justify-content-center h-100">
+                                <i class="fas fa-newspaper fa-4x text-muted"></i>
+                            </div>
+                            @endif
                         </div>
-                        @endif
 
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">{{ $item->title }}</h5>

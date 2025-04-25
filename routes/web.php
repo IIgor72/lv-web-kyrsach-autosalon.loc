@@ -23,7 +23,7 @@ Route::prefix('cars')->group(function () {
 // Новости
 Route::prefix('news')->group(function () {
     Route::get('/', [NewsController::class, 'index'])->name('news.index');
-    Route::get('/{slug}', [NewsController::class, 'show'])->name('news.show');
+    Route::get('/{news}', [NewsController::class, 'show'])->name('news.show');
 });
 
 // Сервис

@@ -39,7 +39,12 @@ class Car extends Model
     }
 
     public function scopeActive(Builder $query)
-{
-    return $query->where('is_active', true);
-}
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug'; // Указываем, что для маршрутизации использовать поле slug
+    }
 }

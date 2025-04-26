@@ -10,8 +10,10 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $news = News::active()->latest()->take(3)->get();
+        // $cars = Car::all();
         $cars = Car::active()->with('type')->latest()->take(6)->get();
+        $news = News::active()->latest()->take(6)->get();
+
         return view('front.home', compact('news', 'cars'));
     }
 }

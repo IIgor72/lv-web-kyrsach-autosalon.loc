@@ -104,12 +104,12 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     const carsCarousel = new bootstrap.Carousel(document.getElementById('carsCarousel'), {
-        interval: 5000,
+        interval: 10000,
         wrap: true
     });
 
     const newsCarousel = new bootstrap.Carousel(document.getElementById('newsCarousel'), {
-        interval: false,
+        interval: 10000,
         wrap: true
     });
 });

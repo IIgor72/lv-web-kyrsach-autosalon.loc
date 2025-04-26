@@ -3,6 +3,27 @@
 @section('title', $car->name)
 
 @section('content')
+
+@if(session('success'))
+<div class="container">
+    <div class="alert alert-success alert-dismissible fade show mt-4" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+@endif
+
+@if(session('error'))
+<div class="container">
+    <div class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+@endif
+
 <div class="container mt-4">
     <div class="row mb-4 g-4">
         <!-- Фото автомобиля -->
@@ -46,7 +67,7 @@
                 </div>
 
                 <div class="d-grid gap-2 d-md-flex mt-auto">
-                    {{-- <a href="{{ route('test-drive.create', $car) }}" class="btn btn-primary btn-lg">Записаться на тест-драйв</a> --}}
+                    <a href="{{ route('test-drive.create', $car) }}" class="btn btn-primary btn-lg">Записаться на тест-драйв</a>
                     <a href="{{ route('cars.index') }}" class="btn btn-outline-secondary btn-lg">Назад к моделям</a>
                 </div>
             </div>

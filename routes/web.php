@@ -30,8 +30,8 @@ Route::prefix('news')->group(function () {
 Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
 
 // Тест-драйв
-//Route::get('/test-drive', [TestDriveController::class, 'index'])->name('test-drive.index');
-//Route::post('/test-drive', [TestDriveController::class, 'store'])->name('test-drive.store');
+Route::get('/test-drive/{car}', [TestDriveController::class, 'create'])->name('test-drive.create');
+Route::post('/test-drive/{car}', [TestDriveController::class, 'store'])->name('test-drive.store');
 
 // Контакты
 Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
@@ -39,6 +39,3 @@ Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.ind
 Route::get('/welcome', function () {
     return view('welcome');
 });
-
-
-

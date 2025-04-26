@@ -2,9 +2,6 @@
 
 @section('title', 'Контакты')
 
-@section('styles')
-
-
 @section('content')
 <div class="corporate-container">
     <div class="row mt-4">
@@ -47,10 +44,20 @@
                     <h2 class="h4 mb-0">Схема проезда</h2>
                 </div>
                 <div class="card-body p-0">
-                    <div id="map" style="height: 400px;"></div>
+                    <!-- Яндекс.Карта -->
+                    <iframe
+                        src="https://yandex.ru/map-widget/v1/?um=constructor%3A1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p&amp;source=constructor"
+                        width="100%"
+                        height="400"
+                        frameborder="0"
+                        style="border:0;"
+                        allowfullscreen
+                        aria-hidden="false"
+                        tabindex="0">
+                    </iframe>
                 </div>
                 <div class="card-footer bg-white">
-                    <a href="#" class="corporate-btn btn">Построить маршрут</a>
+                    <a href="https://yandex.ru/maps/-/CHfnBB37" target="_blank" class="btn btn-primary">Построить маршрут</a>
                 </div>
             </div>
         </div>
@@ -58,37 +65,21 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-    function initMap() {
-        const location = { lat: 55.706, lng: 37.655 };
-        const map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 15,
-            center: location,
-            styles: [
-                {
-                    "featureType": "all",
-                    "elementType": "all",
-                    "stylers": [
-                        { "saturation": -100 }
-                    ]
-                }
-            ]
-        });
-
-        new google.maps.Marker({
-            position: location,
-            map: map,
-            title: "Наш автосалон",
-            icon: {
-                url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
-            }
-        });
-    }
-</script>
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
-@endpush
-
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+<style>
+    .corporate-container {
+        padding: 20px;
+    }
+    .corporate-card {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .corporate-card-header {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+</style>
 @endpush

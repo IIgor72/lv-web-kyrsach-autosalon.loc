@@ -12,10 +12,9 @@ export default defineConfig({
     ],
 
     server: {
-        // Указываем явный хост и порт Open Server
         host: 'localhost',
         port: 5173,
-        strictPort: true, // Запрещаем Vite менять порт
+        strictPort: true,
         hmr: {
             host: 'localhost',
             protocol: 'ws',

@@ -15,24 +15,31 @@
                 <div class="card-body">
                     <div class="mb-4">
                         <h3 class="corporate-h2 h5">Адрес</h3>
-                        <p class="mb-0"><i class="bi bi-geo-alt-fill text-danger me-2"></i>г. Москва, ул. Автозаводская, д. 23</p>
+                        <p class="mb-0"><i class="bi bi-geo-alt-fill text-danger me-2"></i>{{ $contact->address }}</p>
                     </div>
 
                     <div class="mb-4">
                         <h3 class="corporate-h2 h5">Телефоны</h3>
-                        <p class="mb-0"><i class="bi bi-telephone-fill text-danger me-2"></i>+7 (495) 123-45-67</p>
-                        <p class="mb-0"><i class="bi bi-telephone-fill text-danger me-2"></i>+7 (800) 123-45-67</p>
+                        <p class="mb-0"><i class="bi bi-telephone-fill text-danger me-2"></i>{{ $contact->phone }}</p>
+                        @if ($contact->phone2 ?? false)
+                            <p class="mb-0"><i class="bi bi-telephone-fill text-danger me-2"></i>{{ $contact->phone2 }}</p>
+                        @endif
                     </div>
 
                     <div class="mb-4">
                         <h3 class="corporate-h2 h5">Email</h3>
-                        <p class="mb-0"><i class="bi bi-envelope-fill text-danger me-2"></i>info@autosalon.ru</p>
+                        <p class="mb-0"><i class="bi bi-envelope-fill text-danger me-2"></i>{{ $contact->email }}</p>
                     </div>
 
                     <div class="mb-4">
                         <h3 class="corporate-h2 h5">Часы работы</h3>
-                        <p class="mb-0"><i class="bi bi-clock-fill text-danger me-2"></i>Пн-Пт: 9:00 - 20:00</p>
-                        <p class="mb-0"><i class="bi bi-clock-fill text-danger me-2"></i>Сб-Вс: 10:00 - 18:00</p>
+                        @php
+                            $workHours = explode(',', $contact->work_hours ?? '');
+                            $weekdays = $workHours[0] ?? 'Пн-Пт: 9:00 - 20:00';
+                            $weekends = $workHours[1] ?? 'Сб-Вс: 10:00 - 18:00';
+                        @endphp
+                        <p class="mb-0"><i class="bi bi-clock-fill text-danger me-2"></i>{{ $weekdays }}</p>
+                        <p class="mb-0"><i class="bi bi-clock-fill text-danger me-2"></i>{{ $weekends }}</p>
                     </div>
                 </div>
             </div>
@@ -46,7 +53,7 @@
                 <div class="card-body p-0">
                     <!-- Яндекс.Карта -->
                     <iframe
-                        src="https://yandex.ru/map-widget/v1/?um=constructor%3A1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p&amp;source=constructor"
+                        src="{{ $contact->map_link }}"
                         width="100%"
                         height="400"
                         frameborder="0"

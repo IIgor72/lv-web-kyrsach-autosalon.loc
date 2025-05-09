@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\Front\{
     CarController,
     NewsController,
@@ -11,11 +10,14 @@ use App\Http\Controllers\Front\{
     HomeController
 };
 use App\Http\Controllers\Admin\{
-    AdminController
+    AdminController,
+    CarController as AdminCarController,
+    NewsController as AdminNewsController,
+    TestDriveController as AdminTestDriveController,
+    ContactController as AdminContactController,
+   //UserController
 };
-use App\Http\Controllers\Auth\{
-    LoginController
-};
+use App\Http\Controllers\Auth\LoginController;
 
 // Главная страница
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -49,14 +51,58 @@ Route::get('/welcome', function () {
 // Аутентификация
 Route::prefix('auth')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/login', [LoginController::class, 'login'])->name('auth.login');
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
 
 // Админка
-Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->group(function () {
-    Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
-    // Здесь можно добавить другие админ-роуты
+Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->name('admin.')->group(function () {
+    // Главная админ-панель
+    Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+    // Управление автомобилями
+    Route::prefix('cars')->controller(AdminCarController::class)->group(function () {
+        Route::get('/', 'index')->name('cars.index');
+        Route::get('/create', 'create')->name('cars.create');
+        Route::post('/', 'store')->name('cars.store');
+        Route::get('/{car}/edit', 'edit')->name('cars.edit');
+        Route::put('/{car}', 'update')->name('cars.update');
+        Route::delete('/{car}', 'destroy')->name('cars.destroy');
+    });
+
+    // Управление новостями
+    Route::prefix('news')->controller(AdminNewsController::class)->group(function () {
+        Route::get('/', 'index')->name('news.index');
+        Route::get('/create', 'create')->name('news.create');
+        Route::post('/', 'store')->name('news.store');
+        Route::get('/{news}/edit', 'edit')->name('news.edit');
+        Route::put('/{news}', 'update')->name('news.update');
+        Route::delete('/{news}', 'destroy')->name('news.destroy');
+    });
+
+    // Управление тест-драйвами
+    Route::prefix('test-drives')->controller(AdminTestDriveController::class)->group(function () {
+        Route::get('/', 'index')->name('test-drives.index');
+        Route::get('/{testDrive}', 'show')->name('test-drives.show');
+        Route::delete('/{testDrive}', 'destroy')->name('test-drives.destroy');
+    });
+
+    // Контакт
+    Route::prefix('contacts')->group(function () {
+        Route::get('/', [AdminContactController::class, 'index'])->name('admin.contacts.index');
+        Route::put('/{contact}', [AdminContactController::class, 'update'])->name('admin.contacts.update');
+    });
+
+    //Route::post('/cars/import', [AdminCarController::class, 'import'])->name('admin.cars.import');
+    //Route::get('/cars/import-form', [AdminCarController::class, 'showImportForm'])->name('admin.cars.import.form');
+
+    // Управление пользователями
+/*    Route::prefix('users')->controller(UserController::class)->group(function () {
+        Route::get('/', 'index')->name('users.index');
+        Route::get('/create', 'create')->name('users.create');
+        Route::post('/', 'store')->name('users.store');
+        Route::get('/{user}/edit', 'edit')->name('users.edit');
+        Route::put('/{user}', 'update')->name('users.update');
+        Route::delete('/{user}', 'destroy')->name('users.destroy');
+    });*/
 });
-
-

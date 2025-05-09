@@ -7,25 +7,21 @@ use App\Models\Car;
 use App\Models\News;
 use App\Models\TestDrive;
 use App\Models\User;
-use Spatie\Activitylog\Models\Activity;
+use Maatwebsite\Excel\Facades\Excel;
+use League\Csv\Reader;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
     public function index()
     {
-        return view('admin.dashboard', [
+        $stats = [
             'carsCount' => Car::count(),
             'newsCount' => News::count(),
             'testDrivesCount' => TestDrive::count(),
-            'usersCount' => User::count(),
-            'activities' => Activity::latest()->take(10)->get(),
-            'lastCronRun' => $this->getLastCronRunTime()
-        ]);
-    }
+            'usersCount' => User::where('role', '!=', 'user')->count()
+        ];
 
-    protected function getLastCronRunTime()
-    {
-        // Логика получения времени последнего выполнения CRON
-        return now()->subMinutes(rand(0, 60))->diffForHumans();
+        return view('admin.dashboard', $stats);
     }
 }

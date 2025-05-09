@@ -68,6 +68,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->name('admin.')
         Route::get('/{car}/edit', 'edit')->name('cars.edit');
         Route::put('/{car}', 'update')->name('cars.update');
         Route::delete('/{car}', 'destroy')->name('cars.destroy');
+        Route::post('/import', [AdminCarController::class, 'import'])->name('cars.import');
+        Route::get('/import', [AdminCarController::class, 'showImportForm'])->name('cars.import.form');
     });
 
     // Управление новостями
@@ -93,8 +95,8 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->name('admin.')
         Route::put('/{contact}', [AdminContactController::class, 'update'])->name('admin.contacts.update');
     });
 
-    //Route::post('/cars/import', [AdminCarController::class, 'import'])->name('admin.cars.import');
-    //Route::get('/cars/import-form', [AdminCarController::class, 'showImportForm'])->name('admin.cars.import.form');
+    Route::post('/cars/import', [AdminCarController::class, 'import'])->name('admin.cars.import');
+    Route::get('/cars/import', [AdminCarController::class, 'showImportForm'])->name('admin.cars.import.form');
 
     // Управление пользователями
 /*    Route::prefix('users')->controller(UserController::class)->group(function () {

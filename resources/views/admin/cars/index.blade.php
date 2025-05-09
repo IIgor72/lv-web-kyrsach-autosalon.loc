@@ -11,13 +11,18 @@
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Управление автомобилями</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <a href="{{ route('admin.cars.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-lg"></i> Добавить автомобиль
-                        </a>
+                        <div class="btn-group me-2">
+                            <a href="{{ route('admin.cars.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg"></i> Добавить автомобиль
+                            </a>
+                            <a href="{{ route('admin.admin.cars.import.form') }}" class="btn btn-success">
+                                <i class="bi bi-upload"></i> Импорт
+                            </a>
+                        </div>
                     </div>
                 </div>
 
-                @if(session('success'))
+                @if(session('success'))admin.cars.import.form
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
 

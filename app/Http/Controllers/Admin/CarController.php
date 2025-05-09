@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use League\Csv\Reader;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CarController extends Controller
 {
@@ -29,7 +30,7 @@ class CarController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|unique:cars,slug',
-            'type_id' => 'required|exists:car_types,id',
+            'car_type_id' => 'required|exists:car_types,id',
             'price' => 'required|numeric',
             'description' => 'required|string',
             'is_active' => 'boolean',
@@ -68,7 +69,7 @@ class CarController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|unique:cars,slug,'.$car->id,
-            'type_id' => 'required|exists:car_types,id',
+            'car_type_id' => 'required|exists:car_types,id',
             'price' => 'required|numeric',
             'description' => 'required|string',
             'is_active' => 'boolean',
@@ -130,101 +131,74 @@ class CarController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx,xls',
+            'file' => 'required|file|mimes:csv,txt',
             'photos_archive' => 'nullable|file|mimes:zip'
         ]);
 
-        $file = $request->file('file');
-        $extension = $file->getClientOriginalExtension();
+        // Обработка CSV файла
+        $csvData = array_map('str_getcsv', file($request->file('file')->getRealPath()));
+        $headers = array_shift($csvData);
 
-        // Обработка ZIP архива с фото (если загружен)
+        // Обработка ZIP архива с фото
         $photos = [];
         if ($request->hasFile('photos_archive')) {
-            $zipPath = $request->file('photos_archive')->store('temp');
             $zip = new \ZipArchive;
-            if ($zip->open(storage_path('app/'.$zipPath)) {
+            if ($zip->open($request->file('photos_archive')->getRealPath()) === true) {
                 for ($i = 0; $i < $zip->numFiles; $i++) {
                     $filename = $zip->getNameIndex($i);
-                    $photos[pathinfo($filename, PATHINFO_FILENAME)] = $filename;
+                    if (substr($filename, -1) !== '/') {
+                        $photos[pathinfo($filename, PATHINFO_FILENAME)] = $zip->getFromIndex($i);
+                    }
                 }
-            $zip->close();
-        }
-            Storage::delete($zipPath);
+                $zip->close();
+            }
         }
 
-        if ($extension === 'csv') {
-            $this->importFromCSV($file, $photos);
-        } else {
-            $this->importFromExcel($file, $photos);
+        // Импорт данных
+        foreach ($csvData as $row) {
+            $data = array_combine($headers, $row);
+
+            // Проверяем существование автомобиля
+            if (Car::where('slug', $data['slug'])->exists()) {
+                continue;
+            }
+
+            // Создаем автомобиль (пока без изображения)
+            $car = Car::create([
+                'car_type_id' => $data['car_type_id'],
+                'name' => $data['name'],
+                'slug' => $data['slug'],
+                'description' => $data['description'],
+                'price' => $data['price'],
+                'engine' => $data['engine'],
+                'power' => $data['power'],
+                'color' => $data['color'],
+                'is_active' => $data['is_active'] ?? true,
+                'image' => null // Инициализируем как null
+            ]);
+
+            // Сохраняем фото если есть
+            if (isset($data['image']) && isset($photos[pathinfo($data['image'], PATHINFO_FILENAME)])) {
+                $photoContent = $photos[pathinfo($data['image'], PATHINFO_FILENAME)];
+                $filename = Str::random(20).'.jpg';
+                $path = "cars/{$car->id}/{$filename}";
+
+                Storage::disk('public')->put($path, $photoContent);
+
+                // Создаем запись в CarImage
+                $image = $car->images()->create([
+                    'image_path' => $path,
+                    'alt' => $data['name']
+                ]);
+
+                // Обновляем поле image в Car
+                $car->update([
+                    'image' => $path
+                ]);
+            }
         }
 
         return redirect()->route('admin.cars.index')
             ->with('success', 'Каталог успешно импортирован');
-    }
-
-    private function importFromCSV($file, $photos)
-    {
-        $csv = Reader::createFromPath($file->getPathname(), 'r');
-        $csv->setHeaderOffset(0);
-
-        foreach ($csv as $record) {
-            $this->createCarFromRecord($record, $photos);
-        }
-    }
-
-    private function importFromExcel($file, $photos)
-    {
-        Excel::import(new class($photos) implements \Maatwebsite\Excel\Concerns\ToCollection {
-            protected $photos;
-
-            public function __construct($photos)
-            {
-                $this->photos = $photos;
-            }
-
-            public function collection(\Illuminate\Support\Collection $rows)
-            {
-                foreach ($rows as $row) {
-                    $record = $row->toArray();
-                    app(AdminCarController::class)->createCarFromRecord($record, $this->photos);
-                }
-            }
-        }, $file);
-    }
-
-    public function createCarFromRecord(array $record, array $photos = [])
-    {
-        // Основные данные автомобиля
-        $car = Car::create([
-            'name' => $record['name'] ?? $record['model'] ?? 'Неизвестно',
-            'slug' => Str::slug($record['name'] ?? $record['model'] ?? uniqid()),
-            'type_id' => $this->getTypeId($record['type'] ?? ''),
-            'price' => $record['price'] ?? 0,
-            'description' => $record['description'] ?? '',
-            'is_active' => true
-        ]);
-
-        // Обработка фото
-        if (isset($record['photo']) && isset($photos[$record['photo']])) {
-            $this->processCarPhoto($car, $photos[$record['photo']], $record['photo_title'] ?? '');
-        }
-    }
-
-    private function getTypeId($typeName)
-    {
-        return CarType::firstOrCreate(['name' => $typeName])->id;
-    }
-
-    private function processCarPhoto($car, $photoPath, $title)
-    {
-        $filename = uniqid() . '.' . pathinfo($photoPath, PATHINFO_EXTENSION);
-        $storagePath = "cars/{$car->id}/{$filename}";
-
-        Storage::disk('public')->put($storagePath, file_get_contents($photoPath));
-
-        $car->images()->create([
-            'path' => $storagePath,
-            'alt' => $title ?: 'Фото автомобиля ' . $car->name
-        ]);
     }
 }

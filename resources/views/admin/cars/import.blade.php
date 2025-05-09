@@ -14,7 +14,7 @@
 
                 <div class="card">
                     <div class="card-body">
-                        <form method="POST" action="{{ route('admin.cars.import') }}" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('admin.admin.cars.import') }}" enctype="multipart/form-data">
                             @csrf
 
                             <div class="mb-3">
@@ -44,9 +44,10 @@
                         Пример CSV файла
                     </div>
                     <div class="card-body">
-                    <pre>name,type,price,description,photo,photo_title
-BMW X5,Кроссовер,5000000,"Премиальный кроссовер",bmw_x5.jpg,"BMW X5 фронтальный вид"
-Audi A6,Седан,4000000,"Бизнес-класс",audi_a6.jpg,"Audi A6 боковой вид"</pre>
+                    <pre>car_type_id,name,slug,description,price,engine,power,color,image,is_active
+1,BMW X4,bmw-x4,"Рекомендации и поддержание мощных двигателей",8000000000,3.0L,340,Черный,bmw_x5.jpg,1
+2,Audi A3,audi-a3,"Элективный баланс-класса",45000000,4.0L,100,Серый,audi_a4.jpg,1
+</pre>
                     </div>
                 </div>
             </main>

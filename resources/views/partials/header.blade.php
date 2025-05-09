@@ -20,6 +20,14 @@
             </ul>
             @auth
                 <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light">Админпанель</a>
+                <a href="{{ route('logout') }}" class="btn btn-outline-light"
+                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    Выйти
+                </a>
+
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
             @endauth
         </div>
     </div>

@@ -10,6 +10,12 @@ use App\Http\Controllers\Front\{
     ContactController,
     HomeController
 };
+use App\Http\Controllers\Admin\{
+    AdminController
+};
+use App\Http\Controllers\Auth\{
+    LoginController
+};
 
 // Главная страница
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -39,3 +45,18 @@ Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.ind
 Route::get('/welcome', function () {
     return view('welcome');
 });
+
+// Аутентификация
+Route::prefix('auth')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+});
+
+// Админка
+Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->group(function () {
+    Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
+    // Здесь можно добавить другие админ-роуты
+});
+
+

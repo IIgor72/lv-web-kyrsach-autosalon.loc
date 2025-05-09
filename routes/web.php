@@ -15,7 +15,7 @@ use App\Http\Controllers\Admin\{
     NewsController as AdminNewsController,
     TestDriveController as AdminTestDriveController,
     ContactController as AdminContactController,
-   //UserController
+    UserController
 };
 use App\Http\Controllers\Auth\LoginController;
 
@@ -99,12 +99,12 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->name('admin.')
     Route::get('/cars/import', [AdminCarController::class, 'showImportForm'])->name('admin.cars.import.form');
 
     // Управление пользователями
-/*    Route::prefix('users')->controller(UserController::class)->group(function () {
+    Route::prefix('users')->controller(UserController::class)->group(function () {
         Route::get('/', 'index')->name('users.index');
         Route::get('/create', 'create')->name('users.create');
         Route::post('/', 'store')->name('users.store');
         Route::get('/{user}/edit', 'edit')->name('users.edit');
         Route::put('/{user}', 'update')->name('users.update');
         Route::delete('/{user}', 'destroy')->name('users.destroy');
-    });*/
+    });
 });

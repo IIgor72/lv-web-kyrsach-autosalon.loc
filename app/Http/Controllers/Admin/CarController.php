@@ -139,7 +139,7 @@ class CarController extends Controller
         $csvData = array_map('str_getcsv', file($request->file('file')->getRealPath()));
         $headers = array_shift($csvData);
 
-        // Обработка ZIP архива с фото (если загружен)
+        // Обработка ZIP архива с фото
         $photosFromArchive = [];
         if ($request->hasFile('photos_archive')) {
             $zip = new \ZipArchive;
@@ -163,7 +163,7 @@ class CarController extends Controller
                 continue;
             }
 
-            // Создаем автомобиль (пока без изображения)
+            // Создаем автомобиль
             $car = Car::create([
                 'car_type_id' => $data['car_type_id'],
                 'name' => $data['name'],
@@ -182,7 +182,7 @@ class CarController extends Controller
                 $imagePath = null;
                 $imageFilename = pathinfo($data['image'], PATHINFO_FILENAME);
 
-                // 1. Пробуем загрузить по URL из CSV
+                // Пробуем загрузить по URL из CSV
                 if (filter_var($data['image'], FILTER_VALIDATE_URL)) {
                     try {
                         $imageContent = file_get_contents($data['image']);
@@ -193,11 +193,11 @@ class CarController extends Controller
                             $imagePath = $path;
                         }
                     } catch (\Exception $e) {
-                        // Если не удалось загрузить по URL, пробуем архив
+
                     }
                 }
 
-                // 2. Если URL не сработал, пробуем взять из архива
+                // Если URL не сработал, пробуем взять из архива
                 if (!$imagePath && isset($photosFromArchive[$imageFilename])) {
                     $photoContent = $photosFromArchive[$imageFilename];
                     $filename = Str::random(20).'.jpg';
@@ -206,15 +206,13 @@ class CarController extends Controller
                     $imagePath = $path;
                 }
 
-                // Если изображение найдено (из URL или архива)
+                // Если изображение найдено добавляем в модели
                 if ($imagePath) {
-                    // Создаем запись в CarImage
                     $car->images()->create([
                         'image_path' => $imagePath,
                         'alt' => $data['name']
                     ]);
 
-                    // Обновляем поле image в Car
                     $car->update(['image' => $imagePath]);
                 }
             }

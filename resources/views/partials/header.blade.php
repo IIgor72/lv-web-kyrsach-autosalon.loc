@@ -24,10 +24,11 @@
                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                     Выйти
                 </a>
-
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                     @csrf
                 </form>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-outline-light">Войти</a>
             @endauth
         </div>
     </div>

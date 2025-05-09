@@ -30,9 +30,9 @@
                             </a>
                         </li>
                         <li class="nav-item">
-{{--                            <a class="nav-link text-white" href="{{ route('admin.users.index') }}">
+                            <a class="nav-link text-white" href="{{ route('admin.users.index') }}">
                                 <i class="bi bi-people me-2"></i>Пользователи
-                            </a>--}}
+                            </a>
                         </li>
                     </ul>
 
@@ -56,9 +56,9 @@
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Панель управления</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
+{{--                        <div class="btn-group me-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary">Экспорт</button>
-                        </div>
+                        </div>--}}
                     </div>
                 </div>
 
@@ -69,7 +69,6 @@
                     </div>
                 @endif
 
-                <!-- Statistics Cards -->
                 <div class="row mb-4">
                     <div class="col-md-3 mb-3">
                         <div class="card text-white bg-primary h-100">
@@ -109,9 +108,9 @@
                             <div class="card-body">
                                 <h5 class="card-title">Пользователи</h5>
                                 <p class="card-text display-6">{{ $usersCount ?? 0 }}</p>
-{{--                                <a href="{{ route('admin.users.index') }}" class="text-white text-decoration-none">
+                                <a href="{{ route('admin.users.index') }}" class="text-white text-decoration-none">
                                     Управление <i class="bi bi-arrow-right"></i>
-                                </a>--}}
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -132,9 +131,9 @@
                                     <a href="{{ route('admin.news.create') }}" class="btn btn-success">
                                         <i class="bi bi-plus-lg me-2"></i>Добавить новость
                                     </a>
-{{--                                    <a href="{{ route('admin.users.create') }}" class="btn btn-warning">
+                                    <a href="{{ route('admin.users.create') }}" class="btn btn-warning">
                                         <i class="bi bi-person-plus me-2"></i>Добавить пользователя
-                                    </a>--}}
+                                    </a>
                                 </div>
                             </div>
                         </div>

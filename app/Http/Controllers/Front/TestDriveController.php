@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Car;
 use App\Models\TestDrive;
 use Illuminate\Http\Request;
+use App\Http\Requests\TestDriveRequest;
 
 class TestDriveController extends Controller
 {
@@ -18,24 +19,13 @@ class TestDriveController extends Controller
         return view('front.test_drive.create', compact('car'));
     }
 
-    public function store(Request $request, Car $car)
+    public function store(TestDriveRequest $request, Car $car)
 {
     if (!$car->is_active) {
         return back()->withInput()->with('error', 'Этот автомобиль временно недоступен для тест-драйва');
     }
 
-    $validated = $request->validate([
-        'name' => 'required|string|max:255|regex:/^[а-яА-ЯёЁ\s]+$/u',
-        'phone' => 'required|string|max:20|regex:/^\+?\d{1}?\s?\(?\d{3}\)?\s?\d{3}-?\d{2}-?\d{2}$/',
-        'email' => 'required|email|max:255',
-        'date' => 'required|date|after:today',
-        'time' => 'required',
-    ], [
-        'name.regex' => 'ФИО должно содержать только русские буквы',
-        'phone.regex' => 'Укажите телефон в формате +7 (XXX) XXX-XX-XX',
-        'date.after' => 'Дата тест-драйва должна быть не ранее завтрашнего дня',
-    ]);
-
+    $validated = $request->validated();
     $validated['car_id'] = $car->id;
 
     try {

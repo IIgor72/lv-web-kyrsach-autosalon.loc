@@ -22,7 +22,7 @@
                         </div>
                         <div class="card-footer bg-white">
                             <a href="{{ route('cars.show', $car->slug) }}" class="btn btn-primary me-2">Подробнее</a>
-                            {{-- <a href="{{ route('test-drive.create', $car) }}" class="btn btn-outline-primary">Тест-драйв</a> --}}
+                            <a href="{{ route('test-drive.create', $car) }}" class="btn btn-outline-primary">Тест-драйв</a>
                         </div>
                     </div>
                 </div>

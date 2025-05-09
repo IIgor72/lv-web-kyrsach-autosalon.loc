@@ -11,7 +11,6 @@ class TestDriveController extends Controller
 {
     public function create(Car $car)
     {
-        // Проверка доступности автомобиля
         if (!$car->is_active) {
             abort(404, 'Этот автомобиль недоступен для тест-драйва');
         }
@@ -21,7 +20,6 @@ class TestDriveController extends Controller
 
     public function store(Request $request, Car $car)
 {
-    // Проверка доступности автомобиля
     if (!$car->is_active) {
         return back()->withInput()->with('error', 'Этот автомобиль временно недоступен для тест-драйва');
     }

@@ -45,6 +45,6 @@ class Car extends Model
 
     public function getRouteKeyName()
     {
-        return 'slug'; // Указываем, что для маршрутизации использовать поле slug
+        return 'slug';
     }
 }

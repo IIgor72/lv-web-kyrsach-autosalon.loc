@@ -139,15 +139,15 @@ class CarController extends Controller
         $csvData = array_map('str_getcsv', file($request->file('file')->getRealPath()));
         $headers = array_shift($csvData);
 
-        // Обработка ZIP архива с фото
-        $photos = [];
+        // Обработка ZIP архива с фото (если загружен)
+        $photosFromArchive = [];
         if ($request->hasFile('photos_archive')) {
             $zip = new \ZipArchive;
             if ($zip->open($request->file('photos_archive')->getRealPath()) === true) {
                 for ($i = 0; $i < $zip->numFiles; $i++) {
                     $filename = $zip->getNameIndex($i);
                     if (substr($filename, -1) !== '/') {
-                        $photos[pathinfo($filename, PATHINFO_FILENAME)] = $zip->getFromIndex($i);
+                        $photosFromArchive[pathinfo($filename, PATHINFO_FILENAME)] = $zip->getFromIndex($i);
                     }
                 }
                 $zip->close();
@@ -174,27 +174,49 @@ class CarController extends Controller
                 'power' => $data['power'],
                 'color' => $data['color'],
                 'is_active' => $data['is_active'] ?? true,
-                'image' => null // Инициализируем как null
+                'image' => null
             ]);
 
-            // Сохраняем фото если есть
-            if (isset($data['image']) && isset($photos[pathinfo($data['image'], PATHINFO_FILENAME)])) {
-                $photoContent = $photos[pathinfo($data['image'], PATHINFO_FILENAME)];
-                $filename = Str::random(20).'.jpg';
-                $path = "cars/{$car->id}/{$filename}";
+            // Обработка изображения
+            if (isset($data['image'])) {
+                $imagePath = null;
+                $imageFilename = pathinfo($data['image'], PATHINFO_FILENAME);
 
-                Storage::disk('public')->put($path, $photoContent);
+                // 1. Пробуем загрузить по URL из CSV
+                if (filter_var($data['image'], FILTER_VALIDATE_URL)) {
+                    try {
+                        $imageContent = file_get_contents($data['image']);
+                        if ($imageContent !== false) {
+                            $filename = Str::random(20).'.'.pathinfo($data['image'], PATHINFO_EXTENSION);
+                            $path = "cars/{$car->id}/{$filename}";
+                            Storage::disk('public')->put($path, $imageContent);
+                            $imagePath = $path;
+                        }
+                    } catch (\Exception $e) {
+                        // Если не удалось загрузить по URL, пробуем архив
+                    }
+                }
 
-                // Создаем запись в CarImage
-                $image = $car->images()->create([
-                    'image_path' => $path,
-                    'alt' => $data['name']
-                ]);
+                // 2. Если URL не сработал, пробуем взять из архива
+                if (!$imagePath && isset($photosFromArchive[$imageFilename])) {
+                    $photoContent = $photosFromArchive[$imageFilename];
+                    $filename = Str::random(20).'.jpg';
+                    $path = "cars/{$car->id}/{$filename}";
+                    Storage::disk('public')->put($path, $photoContent);
+                    $imagePath = $path;
+                }
 
-                // Обновляем поле image в Car
-                $car->update([
-                    'image' => $path
-                ]);
+                // Если изображение найдено (из URL или архива)
+                if ($imagePath) {
+                    // Создаем запись в CarImage
+                    $car->images()->create([
+                        'image_path' => $imagePath,
+                        'alt' => $data['name']
+                    ]);
+
+                    // Обновляем поле image в Car
+                    $car->update(['image' => $imagePath]);
+                }
             }
         }
 

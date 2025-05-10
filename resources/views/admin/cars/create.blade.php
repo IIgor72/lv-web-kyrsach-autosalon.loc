@@ -16,8 +16,8 @@
                     @csrf
                     @include('admin.cars._form')
 
-                    <button type="submit" class="btn btn-primary">Создать</button>
-                    <a href="{{ route('admin.cars.index') }}" class="btn btn-secondary">Отмена</a>
+{{--                    <button type="submit" class="btn btn-primary">Создать</button>
+                    <a href="{{ route('admin.cars.index') }}" class="btn btn-secondary">Отмена</a>--}}
                 </form>
             </main>
         </div>

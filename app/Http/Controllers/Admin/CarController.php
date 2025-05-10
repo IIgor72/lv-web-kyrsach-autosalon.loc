@@ -66,51 +66,69 @@ class CarController extends Controller
 
     public function update(Request $request, Car $car)
     {
+        $request->merge(['is_active' => $request->has('is_active')]);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|unique:cars,slug,'.$car->id,
             'car_type_id' => 'required|exists:car_types,id',
             'price' => 'required|numeric',
             'description' => 'required|string',
+            'engine' => 'required|string|max:50',
+            'power' => 'required|integer',
+            'color' => 'required|string|max:50',
             'is_active' => 'boolean',
-            'photos' => 'nullable|array',
-            'photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'photo_titles' => 'nullable|array',
-            'photo_titles.*' => 'nullable|string|max:255',
-            'photo_titles_new' => 'nullable|array',
-            'photo_titles_new.*' => 'nullable|string|max:255',
-            'existing_photos' => 'nullable|array',
-            'existing_photos.*' => 'exists:car_images,id'
+            'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'image_titles' => 'nullable|array',
+            'image_titles.*' => 'nullable|string|max:255',
+            'new_image_titles' => 'nullable|array',
+            'new_image_titles.*' => 'nullable|string|max:255',
+            'delete_images' => 'nullable|array',
+            'delete_images.*' => 'exists:car_images,id'
         ]);
+
+        // Обновление основного изображения
+        if ($request->hasFile('main_image')) {
+            // Удаляем старое изображение если есть
+            if ($car->image) {
+                Storage::disk('public')->delete($car->image);
+            }
+
+            $path = $request->file('main_image')->store('cars/' . $car->id, 'public');
+            $validated['image'] = $path;
+        } elseif ($request->has('existing_main_image')) {
+            $validated['image'] = $request->existing_main_image;
+        }
 
         $car->update($validated);
 
-        // Обновление названий существующих фото
-        if ($request->photo_titles) {
-            foreach ($request->photo_titles as $id => $title) {
+/*        // Обновление названий изображений галереи
+        if ($request->image_titles) {
+            foreach ($request->image_titles as $id => $title) {
                 $car->images()->where('id', $id)->update(['alt' => $title]);
             }
-        }
+        }*/
 
-        // Удаление фото, которых нет в списке существующих
-        if ($request->existing_photos) {
-            $car->images()->whereNotIn('id', $request->existing_photos)->get()->each(function($image) {
-                Storage::disk('public')->delete($image->path);
+        // Удаление отмеченных изображений
+        if ($request->delete_images) {
+            $imagesToDelete = $car->images()->whereIn('id', $request->delete_images)->get();
+            foreach ($imagesToDelete as $image) {
+                Storage::disk('public')->delete($image->image_path);
                 $image->delete();
-            });
-        }
-
-        // Добавление новых фото
-        if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $key => $photo) {
-                $path = $photo->store('cars/' . $car->id, 'public');
-
-                $car->images()->create([
-                    'path' => $path,
-                    'alt' => $request->photo_titles_new[$key] ?? 'Фото автомобиля ' . $car->name
-                ]);
             }
         }
+
+/*        // Добавление новых изображений в галерею
+        if ($request->hasFile('gallery_images')) {
+            foreach ($request->file('gallery_images') as $key => $file) {
+                $path = $file->store('cars/' . $car->id, 'public');
+
+                $car->images()->create([
+                    'image_path' => $path,
+                    'alt' => $request->new_image_titles[$key] ?? 'Фото автомобиля ' . $car->name
+                ]);
+            }
+        }*/
 
         return redirect()->route('admin.cars.index')
             ->with('success', 'Автомобиль успешно обновлен');

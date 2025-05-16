@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use League\Csv\Reader;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class CarController extends Controller
 {
@@ -29,10 +30,13 @@ class CarController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|unique:cars,slug',
+            'slug' => 'required|string|unique:cars,slug,',
             'car_type_id' => 'required|exists:car_types,id',
             'price' => 'required|numeric',
             'description' => 'required|string',
+            'engine' => 'required|string|max:50',
+            'power' => 'required|integer',
+            'color' => 'required|string|max:50',
             'is_active' => 'boolean',
             'photos' => 'nullable|array',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -67,6 +71,7 @@ class CarController extends Controller
     public function update(Request $request, Car $car)
     {
         $request->merge(['is_active' => $request->has('is_active')]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|unique:cars,slug,'.$car->id,
@@ -79,59 +84,135 @@ class CarController extends Controller
             'is_active' => 'boolean',
             'main_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'gallery_images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'image_titles' => 'nullable|array',
-            'image_titles.*' => 'nullable|string|max:255',
-            'new_image_titles' => 'nullable|array',
-            'new_image_titles.*' => 'nullable|string|max:255',
             'delete_images' => 'nullable|array',
             'delete_images.*' => 'exists:car_images,id'
         ]);
 
-        // Обновление основного изображения
-        if ($request->hasFile('main_image')) {
-            // Удаляем старое изображение если есть
-            if ($car->image) {
-                Storage::disk('public')->delete($car->image);
+        DB::beginTransaction();
+
+        try {
+            $duplicateErrors = [];
+
+            // Обработка основного изображения
+            if ($request->hasFile('main_image')) {
+                $mainImage = $request->file('main_image');
+                $mainImageHash = md5_file($mainImage->getRealPath());
+                $duplicateImage = $this->findDuplicateImage($car, $mainImageHash);
+
+                if ($duplicateImage) {
+                    $duplicateErrors[] = 'Основное изображение совпадает с существующим изображением в галерее';
+                } else {
+                    // Удаляем старое изображение
+                    if ($car->image) {
+                        Storage::disk('public')->delete($car->image);
+                        $car->images()->where('image_path', $car->image)->delete();
+                    }
+
+                    $path = $mainImage->store('cars/'.$car->id, 'public');
+                    $validated['image'] = $path;
+
+                    // Создаем запись в галерее
+                    $car->images()->create([
+                        'image_path' => $path,
+                        'is_main' => true
+                    ]);
+                }
+            } elseif ($request->has('existing_main_image')) {
+                $validated['image'] = $request->existing_main_image;
             }
 
-            $path = $request->file('main_image')->store('cars/' . $car->id, 'public');
-            $validated['image'] = $path;
-        } elseif ($request->has('existing_main_image')) {
-            $validated['image'] = $request->existing_main_image;
+            // Если есть ошибки дубликатов - откатываем
+            if (!empty($duplicateErrors)) {
+                DB::rollBack();
+                return back()
+                    ->withErrors(['duplicate_images' => $duplicateErrors])
+                    ->withInput();
+            }
+
+            $car->update($validated);
+
+            // Удаление отмеченных изображений
+            if ($request->delete_images) {
+                $imagesToDelete = $car->images()
+                    ->whereIn('id', $request->delete_images)
+                    ->where('is_main', false)
+                    ->get();
+
+                foreach ($imagesToDelete as $image) {
+                    Storage::disk('public')->delete($image->image_path);
+                    $image->delete();
+                }
+            }
+
+            // Обработка галереи изображений
+            if ($request->hasFile('gallery_images')) {
+                $existingHashes = $car->images->pluck('image_path')
+                    ->filter()
+                    ->mapWithKeys(function ($path) {
+                        return [$path => md5_file(Storage::disk('public')->path($path))];
+                    })
+                    ->toArray();
+
+                foreach ($request->file('gallery_images') as $file) {
+                    $fileHash = md5_file($file->getRealPath());
+
+                    if (in_array($fileHash, $existingHashes)) {
+                        $duplicateErrors[] = 'Изображение "'.$file->getClientOriginalName().'" уже существует';
+                        continue;
+                    }
+
+                    $path = $file->store('cars/'.$car->id, 'public');
+                    $car->images()->create([
+                        'image_path' => $path,
+                        'is_main' => false
+                    ]);
+
+                    $existingHashes[$path] = $fileHash;
+                }
+            }
+
+            // Если есть ошибки после обработки галереи
+            if (!empty($duplicateErrors)) {
+                DB::rollBack();
+                return back()
+                    ->withErrors(['duplicate_images' => $duplicateErrors])
+                    ->withInput();
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.cars.index')
+                ->with('success', 'Автомобиль успешно обновлен');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()
+                ->withErrors(['error' => 'Произошла ошибка при обновлении: '.$e->getMessage()])
+                ->withInput();
+        }
+    }
+
+    protected function findDuplicateImage(Car $car, string $fileHash): ?\App\Models\CarImage
+    {
+        // Проверяем основное изображение
+        if ($car->image && Storage::disk('public')->exists($car->image)) {
+            $existingHash = md5_file(Storage::disk('public')->path($car->image));
+            if ($existingHash === $fileHash) {
+                return null; // Не считаем дубликатом самого себя
+            }
         }
 
-        $car->update($validated);
-
-/*        // Обновление названий изображений галереи
-        if ($request->image_titles) {
-            foreach ($request->image_titles as $id => $title) {
-                $car->images()->where('id', $id)->update(['alt' => $title]);
-            }
-        }*/
-
-        // Удаление отмеченных изображений
-        if ($request->delete_images) {
-            $imagesToDelete = $car->images()->whereIn('id', $request->delete_images)->get();
-            foreach ($imagesToDelete as $image) {
-                Storage::disk('public')->delete($image->image_path);
-                $image->delete();
+        // Проверяем галерею изображений
+        foreach ($car->images as $image) {
+            if (Storage::disk('public')->exists($image->image_path)) {
+                $existingHash = md5_file(Storage::disk('public')->path($image->image_path));
+                if ($existingHash === $fileHash) {
+                    return $image;
+                }
             }
         }
 
-/*        // Добавление новых изображений в галерею
-        if ($request->hasFile('gallery_images')) {
-            foreach ($request->file('gallery_images') as $key => $file) {
-                $path = $file->store('cars/' . $car->id, 'public');
-
-                $car->images()->create([
-                    'image_path' => $path,
-                    'alt' => $request->new_image_titles[$key] ?? 'Фото автомобиля ' . $car->name
-                ]);
-            }
-        }*/
-
-        return redirect()->route('admin.cars.index')
-            ->with('success', 'Автомобиль успешно обновлен');
+        return null;
     }
 
     public function destroy(Car $car)

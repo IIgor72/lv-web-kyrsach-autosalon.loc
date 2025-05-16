@@ -121,9 +121,9 @@
                 <button type="button" class="btn btn-sm btn-danger" id="delete-selected-images">
                     <i class="bi bi-trash"></i> Удалить выбранные
                 </button>
-                <button type="button" class="btn btn-sm btn-primary" id="set-as-main-image">
+{{--                <button type="button" class="btn btn-sm btn-primary" id="set-as-main-image">
                     <i class="bi bi-star-fill"></i> Сделать основным
-                </button>
+                </button>--}}
             </div>
         </div>
     @endif
@@ -196,50 +196,38 @@
             const setAsMainBtn = document.getElementById('set-as-main-image');
             if (setAsMainBtn) {
                 setAsMainBtn.addEventListener('click', function() {
-                    const checkboxes = document.querySelectorAll('.delete-checkbox:checked');
-                    if (checkboxes.length === 0) {
-                        alert('Пожалуйста, выберите одно изображение из галереи');
-                        return;
-                    }
-
-                    if (checkboxes.length > 1) {
-                        alert('Пожалуйста, выберите только одно изображение');
+                    const checkboxes = document.querySelectorAll('.gallery-checkbox:checked');
+                    if (checkboxes.length !== 1) {
+                        alert('Пожалуйста, выберите ровно одно изображение из галереи');
                         return;
                     }
 
                     const checkbox = checkboxes[0];
                     const imageId = checkbox.value;
+                    const galleryItem = checkbox.closest('.gallery-item');
 
                     if (confirm('Вы уверены, что хотите сделать это изображение основным?')) {
-                        // Создаем скрытое поле для отправки на сервер
-                        let hiddenInput = document.querySelector('input[name="set_as_main"]');
-                        if (!hiddenInput) {
-                            hiddenInput = document.createElement('input');
-                            hiddenInput.type = 'hidden';
-                            hiddenInput.name = 'set_as_main';
-                            document.querySelector('form').appendChild(hiddenInput);
-                        }
-                        hiddenInput.value = imageId;
-
-                        // Визуально выделяем выбранное изображение
-                        document.querySelectorAll('.gallery-item').forEach(item => {
-                            item.querySelector('.badge')?.remove();
+                        // Обновляем UI
+                        document.querySelectorAll('.gallery-item .badge').forEach(badge => {
+                            badge.classList.remove('bg-primary');
+                            badge.classList.add('bg-secondary');
+                            badge.textContent = 'Дополнительное';
                         });
 
-                        const selectedItem = checkbox.closest('.gallery-item');
-                        if (selectedItem) {
-                            const badge = document.createElement('span');
-                            badge.className = 'badge bg-primary';
-                            badge.textContent = 'Будет основным';
+                        const badge = galleryItem.querySelector('.badge');
+                        badge.classList.remove('bg-secondary');
+                        badge.classList.add('bg-primary');
+                        badge.textContent = 'Основное (будет сохранено)';
 
-                            const badgeContainer = document.createElement('div');
-                            badgeContainer.className = 'position-absolute top-0 end-0 p-1 bg-white rounded';
-                            badgeContainer.appendChild(badge);
-
-                            selectedItem.appendChild(badgeContainer);
+                        // Устанавливаем скрытое поле для серверной обработки
+                        let mainImageInput = document.querySelector('input[name="new_main_image_id"]');
+                        if (!mainImageInput) {
+                            mainImageInput = document.createElement('input');
+                            mainImageInput.type = 'hidden';
+                            mainImageInput.name = 'new_main_image_id';
+                            document.querySelector('form').appendChild(mainImageInput);
                         }
-
-                        alert('Изображение будет установлено как основное после сохранения');
+                        mainImageInput.value = imageId;
                     }
                 });
             }

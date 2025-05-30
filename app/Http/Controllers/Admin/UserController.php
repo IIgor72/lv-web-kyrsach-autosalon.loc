@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
     public function index()
     {
-        $users = User::where('role', '!=', 'user')->paginate(10);
+        // Показываем всех пользователей кроме обычных пользователей (если нужно)
+        // Или показываем всех пользователей - на ваш выбор
+        $users = User::latest()->paginate(10);
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -26,7 +30,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:admin,manager'
+            'role' => 'required|in:admin,manager,user'
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -46,8 +50,14 @@ class UserController extends Controller
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'role' => 'required|in:admin,manager'
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($user->id)
+            ],
+            'role' => 'required|in:admin,manager,user'
         ];
 
         if ($request->filled('password')) {
@@ -70,7 +80,14 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        // Предотвращаем удаление текущего пользователя
+        if ($user->id === auth()->id()) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Вы не можете удалить свой собственный аккаунт');
+        }
+
         $user->delete();
+
         return redirect()->route('admin.users.index')
             ->with('success', 'Пользователь успешно удален');
     }

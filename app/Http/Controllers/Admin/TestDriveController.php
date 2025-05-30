@@ -14,15 +14,18 @@ class TestDriveController extends Controller
         return view('admin.test-drives.index', compact('testDrives'));
     }
 
-    public function show(TestDrive $testDrive)
+/*    public function show(TestDrive $testDrive)
     {
         return view('admin.test-drives.show', compact('testDrive'));
-    }
+    }*/
 
     public function destroy(TestDrive $testDrive)
     {
         $testDrive->delete();
-        return redirect()->route('admin.test-drives.index')
-            ->with('success', 'Заявка на тест-драйв успешно удалена');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Заявка успешно удалена'
+        ]);
     }
 }

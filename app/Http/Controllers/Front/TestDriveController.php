@@ -19,23 +19,22 @@ class TestDriveController extends Controller
         return view('front.test_drive.create', compact('car'));
     }
 
-    public function store(TestDriveRequest $request, Car $car)
-{
-    if (!$car->is_active) {
-        return back()->withInput()->with('error', 'Этот автомобиль временно недоступен для тест-драйва');
-    }
+    public function store(Request $request, Car $car)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+            'date' => 'required|date|after:today',
+            'time' => 'required|string',
+            'car_id' => 'required|exists:cars,id'
+        ]);
 
-    $validated = $request->validated();
-    $validated['car_id'] = $car->id;
-
-    try {
         TestDrive::create($validated);
 
-        return redirect()->route('cars.show', $car->slug)
-            ->with('success', 'Ваша заявка на тест-драйв '.$car->name.' успешно отправлена! Наш менеджер свяжется с вами в течение часа.');
-
-    } catch (\Exception $e) {
-        return back()->withInput()->with('error', 'Произошла ошибка при отправке заявки. Пожалуйста, попробуйте позже.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Ваша заявка на тест-драйв успешно отправлена!'
+        ]);
     }
-}
 }

@@ -102,7 +102,7 @@ class CarController extends Controller
                 if ($duplicateImage) {
                     $duplicateErrors[] = 'Основное изображение совпадает с существующим изображением в галерее';
                 } else {
-                    // Удаляем старое изображение
+
                     if ($car->image) {
                         Storage::disk('public')->delete($car->image);
                         $car->images()->where('image_path', $car->image)->delete();
@@ -111,7 +111,6 @@ class CarController extends Controller
                     $path = $mainImage->store('cars/'.$car->id, 'public');
                     $validated['image'] = $path;
 
-                    // Создаем запись в галерее
                     $car->images()->create([
                         'image_path' => $path,
                         'is_main' => true
@@ -171,7 +170,7 @@ class CarController extends Controller
                 }
             }
 
-            // Если есть ошибки после обработки галереи
+            // Вывод ошибок
             if (!empty($duplicateErrors)) {
                 DB::rollBack();
                 return back()

@@ -74,7 +74,6 @@
     <textarea class="form-control" id="description" name="description" rows="5">{{ old('description', $car->description ?? '') }}</textarea>
 </div>
 
-<!-- Основное изображение -->
 <div class="mb-3">
     <label for="main_image" class="form-label">Основное изображение</label>
     <input type="file" class="form-control" id="main_image" name="main_image" accept="image/*">
@@ -87,15 +86,13 @@
     @endif
 </div>
 
-<!-- Галерея изображений с каруселью -->
 <div class="mb-3">
     <label class="form-label">Галерея изображений</label>
 
-    <!-- Карусель существующих изображений -->
     @if(isset($car) && $car->images()->where('is_main', false)->count())
         <div class="gallery-carousel mb-3">
             <div class="d-flex overflow-auto pb-2" style="scrollbar-width: thin;">
-                <!-- Основное изображение (первое в галерее) -->
+
                 @if($car->image)
                     <div class="gallery-item me-3 position-relative" style="min-width: 200px;">
                         <img src="{{ Storage::url($car->image) }}" class="img-thumbnail" style="height: 150px; width: 100%; object-fit: cover;">
@@ -153,6 +150,7 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+
             // Добавление новых полей для загрузки изображений
             const addButton = document.getElementById('add-gallery-image');
             if (addButton) {
@@ -192,7 +190,7 @@
                 });
             }
 
-            // Установка выбранного изображения как основного
+            /*// Установка выбранного изображения как основного
             const setAsMainBtn = document.getElementById('set-as-main-image');
             if (setAsMainBtn) {
                 setAsMainBtn.addEventListener('click', function() {
@@ -207,7 +205,7 @@
                     const galleryItem = checkbox.closest('.gallery-item');
 
                     if (confirm('Вы уверены, что хотите сделать это изображение основным?')) {
-                        // Обновляем UI
+
                         document.querySelectorAll('.gallery-item .badge').forEach(badge => {
                             badge.classList.remove('bg-primary');
                             badge.classList.add('bg-secondary');
@@ -219,7 +217,6 @@
                         badge.classList.add('bg-primary');
                         badge.textContent = 'Основное (будет сохранено)';
 
-                        // Устанавливаем скрытое поле для серверной обработки
                         let mainImageInput = document.querySelector('input[name="new_main_image_id"]');
                         if (!mainImageInput) {
                             mainImageInput = document.createElement('input');
@@ -230,9 +227,9 @@
                         mainImageInput.value = imageId;
                     }
                 });
-            }
+            }*/
 
-            // Удаление полей загрузки (делегирование событий)
+            // Удаление полей загрузки
             document.addEventListener('click', function(e) {
                 if (e.target.closest('.remove-gallery-item')) {
                     const item = e.target.closest('.input-group');

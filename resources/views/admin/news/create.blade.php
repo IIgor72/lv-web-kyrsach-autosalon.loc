@@ -11,9 +11,15 @@
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                     <h1 class="h2">Добавить новость</h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Назад к списку
-                        </a>
+                        @if(auth()->user()->isAdmin())
+                            <a href="{{ route('admin.news.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Назад к списку
+                            </a>
+                        @elseif(auth()->user()->isManager())
+                            <a href="{{ route('manager.news.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Назад к списку
+                            </a>
+                        @endif
                     </div>
                 </div>
 
@@ -34,7 +40,11 @@
                                 <h5 class="card-title mb-0">Основная информация</h5>
                             </div>
                             <div class="card-body">
-                                <form action="{{ route('admin.news.store') }}" method="POST" enctype="multipart/form-data">
+                                @if(auth()->user()->isAdmin())
+                                    <form action="{{ route('admin.news.store') }}" method="POST" enctype="multipart/form-data">
+                                @elseif(auth()->user()->isManager())
+                                    <form action="{{ route('manager.news.store') }}" method="POST" enctype="multipart/form-data">
+                                @endif
                                     @csrf
 
                                     <div class="mb-3">
@@ -104,10 +114,19 @@
                                     </div>
 
                                     <div class="d-flex justify-content-between">
-                                        <a href="{{ route('admin.news.index') }}" class="btn btn-secondary">Отмена</a>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-check-lg"></i> Создать новость
-                                        </button>
+                                        @if(auth()->user()->isAdmin())
+                                            <a href="{{ route('admin.news.index') }}" class="btn btn-sm btn-outline-primary">Отмена</a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check-lg"></i> Создать новость
+                                            </button>
+                                            </a>
+                                        @elseif(auth()->user()->isManager())
+                                            <a href="{{ route('manager.news.index') }}" class="btn btn-sm btn-outline-primary">Отмена</a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check-lg"></i> Создать новость
+                                            </button>
+                                            </a>
+                                        @endif
                                     </div>
                                 </form>
                             </div>

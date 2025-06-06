@@ -34,7 +34,11 @@
                                 <h5 class="card-title mb-0">Основная информация</h5>
                             </div>
                             <div class="card-body">
-                                <form action="{{ route('admin.news.update', $news) }}" method="POST" enctype="multipart/form-data">
+                                @if(auth()->user()->isAdmin())
+                                    <form action="{{ route('admin.news.update', $news) }}" method="POST" enctype="multipart/form-data">
+                                @elseif(auth()->user()->isManager())
+                                            <form action="{{ route('manager.news.update', $news) }}" method="POST" enctype="multipart/form-data">
+                                @endif
                                     @csrf
                                     @method('PUT')
 
@@ -111,10 +115,19 @@
                                     </div>
 
                                     <div class="d-flex justify-content-between">
-                                        <a href="{{ route('admin.news.index') }}" class="btn btn-secondary">Отмена</a>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-check-lg"></i> Сохранить изменения
-                                        </button>
+                                        @if(auth()->user()->isAdmin())
+                                            <a href="{{ route('admin.news.index') }}" class="btn btn-sm btn-outline-primary">Отмена</a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check-lg"></i> Сохранить изменения
+                                            </button>
+                                            </a>
+                                        @elseif(auth()->user()->isManager())
+                                            <a href="{{ route('manager.news.index') }}" class="btn btn-sm btn-outline-primary">Отмена</a>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-check-lg"></i> Сохранить изменения
+                                            </button>
+                                            </a>
+                                        @endif
                                     </div>
                                 </form>
                             </div>

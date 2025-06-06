@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -55,8 +56,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
 
-// Админка
-Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->name('admin.')->group(function () {
+// Админка (только для админов)
+Route::prefix('admin')->middleware(['auth:sanctum', 'verified','role:admin'])->name('admin.')->group(function () {
     // Главная админ-панель
     Route::get('/', [AdminController::class, 'index'])->name('dashboard');
 
@@ -72,7 +73,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->name('admin.')
         Route::get('/import', [AdminCarController::class, 'showImportForm'])->name('cars.import.form');
     });
 
-    // Управление новостями
+    // Управление новостями (для админов)
     Route::prefix('news')->controller(AdminNewsController::class)->group(function () {
         Route::get('/', 'index')->name('news.index');
         Route::get('/create', 'create')->name('news.create');
@@ -107,4 +108,13 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'verified'])->name('admin.')
         Route::put('/{user}', 'update')->name('users.update');
         Route::delete('/{user}', 'destroy')->name('users.destroy');
     });
+});
+
+// Отдельные маршруты для менеджера новостей
+Route::prefix('manager/news')->middleware(['auth:sanctum', 'verified', 'role:manager'])->name('manager.')->group(function () {
+    Route::get('/', [AdminNewsController::class, 'index'])->name('news.index');
+    Route::get('/create', [AdminNewsController::class, 'create'])->name('news.create');
+    Route::post('/', [AdminNewsController::class, 'store'])->name('news.store');
+    Route::get('/{news}/edit', [AdminNewsController::class, 'edit'])->name('news.edit');
+    Route::put('/{news}', [AdminNewsController::class, 'update'])->name('news.update');
 });

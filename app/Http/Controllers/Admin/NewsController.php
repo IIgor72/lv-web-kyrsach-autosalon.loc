@@ -5,89 +5,127 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\News;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class NewsController extends Controller
 {
+    /**
+     * Отображение списка новостей
+     */
     public function index()
     {
-        $news = News::latest()->paginate(10);
-        return view('admin.news.index', compact('news'));
-    }
+        $news = News::orderBy('created_at', 'desc')->paginate(15);
 
-    public function create()
-    {
-        return view('admin.news.create');
-    }
+        // Определяем, какой шаблон использовать в зависимости от роли
+        $view = 'admin.news.index';
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'type' => 'nullable|string|in:news,promotion,event',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'published_at' => 'nullable|date',
-            'is_active' => 'boolean'
-        ]);
-
-        // Обработка загрузки изображения
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('news', 'public');
+        // Если пользователь зашел через маршрут менеджера
+        if (request()->route()->getPrefix() === 'manager/news') {
+            $view = 'manager.news.index';
         }
 
-        // Устанавливаем is_active в false, если не передан (чекбокс не отмечен)
-        $validated['is_active'] = $request->has('is_active');
-
-        News::create($validated);
-
-        return redirect()->route('admin.news.index')
-            ->with('success', 'Новость успешно добавлена');
+        return view($view, compact('news'));
     }
 
-    public function edit(News $news)
+    /**
+     * Показать форму создания новости
+     */
+    public function create()
     {
-        return view('admin.news.edit', compact('news'));
+        $view = 'admin.news.create';
+
+        if (request()->route()->getPrefix() === 'manager/news') {
+            $view = 'manager.news.create';
+        }
+
+        return view($view);
     }
 
-    public function update(Request $request, News $news)
+    /**
+     * Сохранить новость
+     */
+    public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'type' => 'nullable|string|in:news,promotion,event',
+            'type' => 'required|in:news,promotion,event',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active' => 'boolean',
             'published_at' => 'nullable|date',
-            'is_active' => 'boolean'
         ]);
 
-        // Обработка загрузки нового изображения
+        $data = $request->all();
+
         if ($request->hasFile('image')) {
-            // Удаляем старое изображение, если оно есть
+            $data['image'] = $request->file('image')->store('news', 'public');
+        }
+
+        $news = News::create($data);
+
+        $redirectRoute = auth()->user()->isAdmin() ? 'admin.news.index' : 'manager.news.index';
+
+        return redirect()->route($redirectRoute)->with('success', 'Новость успешно создана!');
+    }
+
+    /**
+     * Показать форму редактирования
+     */
+    public function edit(News $news)
+    {
+        $view = 'admin.news.edit';
+
+        if (request()->route()->getPrefix() === 'manager/news') {
+            $view = 'manager.news.edit';
+        }
+
+        return view($view, compact('news'));
+    }
+
+    /**
+     * Обновить новость
+     */
+    public function update(Request $request, News $news)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'type' => 'required|in:news,promotion,event',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_active' => 'boolean',
+            'published_at' => 'nullable|date',
+        ]);
+
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            // Удаляем старое изображение
             if ($news->image) {
                 Storage::disk('public')->delete($news->image);
             }
-            $validated['image'] = $request->file('image')->store('news', 'public');
+            $data['image'] = $request->file('image')->store('news', 'public');
         }
 
-        // Устанавливаем is_active в false, если не передан (чекбокс не отмечен)
-        $validated['is_active'] = $request->has('is_active');
+        $news->update($data);
 
-        $news->update($validated);
+        $redirectRoute = auth()->user()->isAdmin() ? 'admin.news.index' : 'manager.news.index';
 
-        return redirect()->route('admin.news.index')
-            ->with('success', 'Новость успешно обновлена');
+        return redirect()->route($redirectRoute)->with('success', 'Новость успешно обновлена!');
     }
 
+    /**
+     * Удалить новость
+     */
     public function destroy(News $news)
     {
-        // Удаляем изображение при удалении новости
+        // Удаляем изображение, если оно есть
         if ($news->image) {
             Storage::disk('public')->delete($news->image);
         }
 
         $news->delete();
-        return redirect()->route('admin.news.index')
-            ->with('success', 'Новость успешно удалена');
+
+        $redirectRoute = auth()->user()->isAdmin() ? 'admin.news.index' : 'manager.news.index';
+
+        return redirect()->route($redirectRoute)->with('success', 'Новость успешно удалена!');
     }
 }

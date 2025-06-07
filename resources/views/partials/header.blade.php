@@ -19,14 +19,16 @@
                 </li>
             </ul>
             @auth
-                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light">Админпанель</a>
-                <a href="{{ route('logout') }}" class="btn btn-outline-light"
-                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    Выйти
-                </a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
+                @if(auth()->user()->isAdmin())
+                    <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light">Админпанель</a>
+                    <a href="{{ route('logout') }}" class="btn btn-outline-light"
+                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        Выйти
+                    </a>
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                        @csrf
+                    </form>
+                @endif
             @else
                 <a href="{{ route('login') }}" class="btn btn-outline-light">Войти</a>
             @endauth
